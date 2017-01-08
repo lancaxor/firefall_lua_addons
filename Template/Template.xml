@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Component xmlns="http://www.red5studios.com/"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://www.red5studios.com/ ../../../../schemas/component.xsd">
+
+  <info
+    title="Template"
+    author="Reisshie aka Alecko"
+    description="Template addon"
+    uiVersion="1000"
+    />
+
+  <events>
+
+    <!-- the addon was loaded -->
+    <Event name="ON_COMPONENT_LOAD" bind="OnComponentLoad" />
+    
+    <!-- player fully loaded -->
+    <Event name="ON_PLAYER_READY" bind="OnPlayerReady" />
+    
+  </events>
+</Component>

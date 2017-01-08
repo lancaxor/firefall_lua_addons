@@ -1,0 +1,85 @@
+
+<?xml version="1.0" encoding="utf-8"?>
+<Component xmlns="http://www.red5studios.com/"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://www.red5studios.com/ ../../../schemas/component.xsd">
+	<Info
+		title="ZoneInfo"
+		author="CookieDuster"
+		description="Shows the number of players on the shard"
+		url=""
+		uiVersion="1000"
+	/>
+
+	<Events>
+		<Event name="ON_COMPONENT_LOAD"				bind="OnComponentLoad" />
+		<Event name="ON_PLAYER_READY"				bind="OnPlayerReady"/>
+		<Event name="MY_HUD_SHOW"					bind="OnHudShow"/>
+		<Event name="ON_PLAYER_JOINED_CHAT_CHANNEL"	bind="OnPlayerJoinedChatChannel"/>
+		<Event name="ON_PLAYER_LEFT_CHAT_CHANNEL"	bind="OnPlayerLeftChatChannel"/>
+		<Event name="ON_UI_ENTITY_AVAILABLE"		bind="OnUiEntityAvailable"/>
+		<Event name="ON_UI_ENTITY_LOST"				bind="OnUiEntityLost"/>
+		<Event name="ON_CHANNEL_JOIN"				bind="OnChannelJoin"/>
+		<Event name="ON_FRIEND_STATUS_CHANGED"		bind="OnFriendStatusChanged"/>
+		<Event name="ON_ENTER_ZONE"					bind="OnEnterZone"/>
+	</Events>
+	
+	<Textures>
+		<Texture name="battleframe_icons" src="./icons/battleframe_icons.png" premultiplied="false">
+			<Region name="medic_icon" top="0" bottom="64" left="0" right="61" />
+			<Region name="recon_icon" top="0" bottom="64" left="61" right="128" />
+			<Region name="bunker_icon" top="64" bottom="126" left="61" right="128" />
+			<Region name="berzerker_icon" top="126" bottom="192" left="0" right="61" />
+			<Region name="guardian_icon" top="126" bottom="192" left="61" right="128" />
+		</Texture>
+	</Textures>
+	
+	<Frames>
+		<HUDFrame name="ZoneInfoZoneFrame" dimensions="center-x:90%; width:100; center-y:0%; height:30;"> 
+			<Children>
+				<Text id="ZoneInfoZoneText" dimensions="left:0; width:100; bottom:100%; height:100%" style="font:Demi_10; halign:center; valign:middle; alpha:1.0"/>
+			</Children>
+			<OnMessage bind="OnMessage"/>
+		</HUDFrame>
+		<HUDFrame name="ZoneInfoIdFrame" dimensions="center-x:90%; width:100; center-y:10%; height:30;"> 
+			<Children>
+				<Text id="ZoneInfoIdText" dimensions="left:0; width:100; bottom:100%; height:100%" style="font:Demi_10; halign:center; valign:middle; alpha:1.0"/>
+			</Children>
+		</HUDFrame>
+		<HUDFrame name="ZoneInfoFingFrame" dimensions="center-x:90%; width:100; center-y:10%; height:30;"> 
+			<Children>
+				<Text id="ZoneInfoFingText" dimensions="left:0; width:100; bottom:100%; height:100%" style="font:Demi_10; halign:center; valign:middle; alpha:1.0"/>
+			</Children>
+		</HUDFrame>
+		<HUDFrame name="ZoneInfoArmyFrame" dimensions="center-x:90%; width:100; center-y:20%; height:30;"> 
+			<Children>
+				<Text id="ZoneInfoArmyText" dimensions="left:0; width:100; bottom:100%; height:100%" style="font:Demi_10; halign:center; valign:middle; alpha:1.0"/>
+			</Children>
+		</HUDFrame>
+		<HUDFrame name="ZoneInfoArmyListFrame" dimensions="center-x:90%; width:100; center-y:50%; height:150;"> 
+			<Children>
+				<Text id="ZoneInfoArmyListText" dimensions="left:0; width:100; bottom:100%; height:100%" style="font:Demi_10; halign:center; valign:middle; alpha:1.0"/>
+			</Children>
+		</HUDFrame>
+		<HUDFrame name="ZoneInfoNearbyFrame" dimensions="center-x:90%; width:100; center-y:40%; height:30;"> 
+			<Children>
+				<Text id="ZoneInfoNearbyText" dimensions="left:0; width:100; bottom:100%; height:100%" style="font:Demi_10; halign:center; valign:middle; alpha:1.0"/>
+			</Children>
+		</HUDFrame>
+		<HUDFrame name="ZoneInfoNearbyListFrame" dimensions="center-x:0%; width:100; center-y:40%; height:150;"> 
+			<Children>
+				<Text id="ZoneInfoNearbyListText" dimensions="left:0; width:100; bottom:100%; height:100%" style="font:Demi_10; halign:center; valign:middle; alpha:1.0"/>
+			</Children>
+		</HUDFrame>
+		<HUDFrame name="ZoneInfoFriendFrame" dimensions="center-x:90%; width:100; center-y:40%; height:30;"> 
+			<Children>
+				<Text id="ZoneInfoFriendText" dimensions="left:0; width:100; bottom:100%; height:100%" style="font:Demi_10; halign:center; valign:middle; alpha:1.0"/>
+			</Children>
+		</HUDFrame>
+		<HUDFrame name="ZoneInfoFriendListFrame" dimensions="center-x:0%; width:100; center-y:40%; height:150;"> 
+			<Children>
+				<Text id="ZoneInfoFriendListText" dimensions="left:0; width:100; bottom:100%; height:100%" style="font:Demi_10; halign:center; valign:middle; alpha:1.0"/>
+			</Children>
+		</HUDFrame>
+	</Frames>
+</Component>

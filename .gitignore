@@ -1,0 +1,11 @@
+# packed addons
+*.zip
+
+# lua environment
+*.dll
+*.exe
+
+#studio files
+*.luaproj*
+*.config
+obj/
