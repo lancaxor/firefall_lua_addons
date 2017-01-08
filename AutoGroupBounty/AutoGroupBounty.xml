@@ -24,5 +24,8 @@ xsi:schemaLocation="http://www.red5studios.com/ ../../../../schemas/component.xs
     <!-- bounty canceled -->
     <Event name="ON_BOUNTY_ABORT_ACK" bind="OnBountyAbort"/>
     <Event name="ON_BOUNTY_REROLL_ACK" bind="OnBountyReroll"/>
+
+    <!-- afk status was changed -->
+    <Event name="ON_AFK_CHANGED" bind="OnAfkChanged"/>
   </events>
 </Component>

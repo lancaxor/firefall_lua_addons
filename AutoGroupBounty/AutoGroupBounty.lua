@@ -11,59 +11,63 @@ local CHAT_TAG = '[AGB]'
 local CHAT_TAG_DEBUG = '[AGB DEBUGGER]'
 
 local flagRestart = false
-local flagInited = false
 local RestartCallback = {}       -- Callback2
 local timeout = 60 -- seconds untill the bounty will be restarted
+local player_afk = false
 
-local options = {
+local OPTIONS = {
     active = false,
     autoStartOnLoad = false,
     debugMode = false,
+    stopOnAfk = false,
     timeout = 300,
     restartByTimeout = true
 }
 
 function OnComponentLoad(args)
     InterfaceOptions.SetCallbackFunc(OnOptionChange, 'AutoGroupBounty')
-    InterfaceOptions.AddCheckBox({id="active", label="Is Active", default=options.active})
-    InterfaceOptions.AddCheckBox({id="autoStartOnLoad", label="Start on player load", default=options.autoStartOnLoad})
-    InterfaceOptions.AddCheckBox({id="debugMode", label="Debug mode", default=options.debugMode})
-    InterfaceOptions.AddCheckBox({id="restartByTimeout", label="Restart By Timeout", default=options.restartByTimeout})
-    InterfaceOptions.AddSlider({id="timeout", max=600, min=10, inc=10, suffix="s", label="Number of request bounty try", default=options.timeout})
+    InterfaceOptions.AddCheckBox({id="active", label="Is Active", default=OPTIONS.active})
+    InterfaceOptions.AddCheckBox({id="autoStartOnLoad", label="Start on player load", default=OPTIONS.autoStartOnLoad})
+    InterfaceOptions.AddCheckBox({id="stopOnAfk", label="Pause if user is AFK", default=OPTIONS.stopOnAfk})
+    InterfaceOptions.AddCheckBox({id="debugMode", label="Debug mode", default=OPTIONS.debugMode})
+    InterfaceOptions.AddCheckBox({id="restartByTimeout", label="Restart By Timeout", default=OPTIONS.restartByTimeout})
+    InterfaceOptions.AddSlider({id="timeout", max=600, min=10, inc=10, suffix="s", label="Number of request bounty try", default=OPTIONS.timeout})
     SetSlashEventHandlers()
 
     RestartCallback = Callback2.Create()
     RestartCallback:Bind(CallbackRestartGroupBounty)
 end 
 
--- player loaded to zone
-function OnPlayerReady(args)
-    if not options.active then
-        return
-    end
-    Debug.EnableLogging(options.debugMode)
-    init(true)
-    Print(options.active and 'Status: Running' or 'Status: Stopped')
-    if options.autoStartOnLoad then
-        GetGroupBounty();
+-- player's AFK status was changed
+function OnAfkChanged(args)
+    isAfk = args.isAfk
+    if not OPTIONS.active or not OPTIONS.stopOnAfk then return end
+    PrintDbg('User AFK status was changed to ' .. (isAfk and 'AFK' or 'NOT AFK'))
+    player_afk = isAfk
+    if isAfk then
+        RestartCallback:Pause()
+    else
+        RestartCallback:Unpause()
+        RestartCallback:Execute()
     end
 end
 
-function init(force)
---[[
-    if not force or flagInited then return end
-
-    RestartCallback = Callback2.Create()
-    RestartCallback:Release()
-    RestartCallback:Bind(CallbackRestartGroupBounty)
---]]
-    flagInited = true
+-- player loaded to zone
+function OnPlayerReady(args)
+    if not OPTIONS.active then
+        return
+    end
+    Debug.EnableLogging(OPTIONS.debugMode)
+    Print(OPTIONS.active and 'Status: Running' or 'Status: Stopped')
+    if OPTIONS.autoStartOnLoad then
+        GetGroupBounty();
+    end
 end
 
 --  join group bounty
 function GetGroupBounty()
 
-    if not options.active then
+    if not OPTIONS.active then
         return
     end
 
@@ -74,10 +78,10 @@ function GetGroupBounty()
     end
 
     PrintDbg('Requesting bounty...')
-    if options.restartByTimeout then
+    if OPTIONS.restartByTimeout then
         Debug.Log('RestartCallback:')
         Debug.Log(RestartCallback)
-        RestartCallback:Reschedule(options.timeout)   -- RequestGroupBounty may be failed so we must use RestartCallback here, not in Callback
+        RestartCallback:Reschedule(OPTIONS.timeout)   -- RequestGroupBounty may be failed so we must use RestartCallback here, not in Callback
     end
     Player.RequestGroupBounty()
 end
@@ -122,7 +126,7 @@ end
 -- Stop addon, cancel group bounty, leave bounty squad
 function AbortAutoGroup()
     flagRestart = false
-    options.active = false
+    OPTIONS.active = false
     if Player.HasActiveGroupBounty() then
         Player.CancelGroupBounty()
     end
@@ -130,7 +134,9 @@ end
 
 -- player has left current squad
 function OnBountyCompleted()
-    if options.active then
+
+    if OPTIONS.active then
+        if OPTIONS.stopOnAfk and player_afk then return end
         GetGroupBounty()
     end
 end
@@ -147,23 +153,22 @@ function OnSlashAgbHandler(args)
     local cmd = args[1] or nil
 
     if 'status' == cmd then
-        local addonStatus = (options.active and 'Status: Running' or 'Status: Stopped')
+        local addonStatus = (OPTIONS.active and 'Status: Running' or 'Status: Stopped')
         local bountyStatus = (Player.HasActiveGroupBounty() and 'has bounty' or 'has no bounty')
         Print(addonStatus .. '; ' .. bountyStatus)    -- cond ? ex1 : ex2 => cond and ex1 or ex2
     elseif 'start' == cmd then
-        if options.active then
+        if OPTIONS.active then
             Print('AutoGroupBounty addon is already running!')
         else
-            options.active = true
-            init(true)
+            OPTIONS.active = true
             Print('AutoGroupBounty addon was started!')
         end
         GetGroupBounty()
     elseif 'stop' == cmd then
-        if not options.active then
+        if not OPTIONS.active then
             Print('AutoGroupBounty is already stopped!')
         else
-            options.active = false
+            OPTIONS.active = false
             Print('AutoGroupBounty addon was stopped!')
         end
     elseif 'abort' == cmd then
@@ -179,7 +184,7 @@ end
 
 -- Print debug message in system channel
 function PrintDbg(message)
-    if options.debugMode then
+    if OPTIONS.debugMode then
         Component.GenerateEvent('MY_SYSTEM_MESSAGE', {text=CHAT_TAG_DEBUG .. ' ' .. message});
     end
 end
@@ -192,14 +197,16 @@ end
 -- option was changed in settings
 function OnOptionChange(key, value)
     if key == 'active'  then
-        options.active = value
+        OPTIONS.active = value
     elseif key == 'debugMode' then
-        options.debugMode = value
+        OPTIONS.debugMode = value
     elseif key == 'autoStartOnLoad' then
-        options.autoStartOnLoad = value
+        OPTIONS.autoStartOnLoad = value
+    elseif key == 'stopOnAfk' then
+        OPTIONS.stopOnAfk = value
     elseif key == 'timeout' then
-        options.timeout = tonumber(value)
+        OPTIONS.timeout = tonumber(value)
     elseif key == 'restartByTimeout' then
-        options.restartByTimeout = value
+        OPTIONS.restartByTimeout = value
     end
 end
