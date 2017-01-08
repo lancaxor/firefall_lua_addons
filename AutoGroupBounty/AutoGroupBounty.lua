@@ -5,35 +5,59 @@ require "lib/lib_InterfaceOptions"
 require "lib/lib_Slash"
 require "lib/lib_ChatLib"
 require "lib/lib_Callback2"
+require "lib/lib_Debug";
 
 local CHAT_TAG = '[AGB]'
 local CHAT_TAG_DEBUG = '[AGB DEBUGGER]'
 
 local flagRestart = false
+local flagInited = false
+local RestartCallback = {}       -- Callback2
+local timeout = 60 -- seconds untill the bounty will be restarted
 
 local options = {
     active = false,
     autoStartOnLoad = false,
     debugMode = false,
-    requestBountyTry = 5
+    timeout = 300,
+    restartByTimeout = true
 }
-
 
 function OnComponentLoad(args)
     InterfaceOptions.SetCallbackFunc(OnOptionChange, 'AutoGroupBounty')
     InterfaceOptions.AddCheckBox({id="active", label="Is Active", default=options.active})
     InterfaceOptions.AddCheckBox({id="autoStartOnLoad", label="Start on player load", default=options.autoStartOnLoad})
     InterfaceOptions.AddCheckBox({id="debugMode", label="Debug mode", default=options.debugMode})
-    InterfaceOptions.AddTextInput({id="requestBountyTry", label="Number of request bounty try", default=options.requestBountyTry})
+    InterfaceOptions.AddCheckBox({id="restartByTimeout", label="Restart By Timeout", default=options.restartByTimeout})
+    InterfaceOptions.AddSlider({id="timeout", max=600, min=10, inc=10, suffix="s", label="Number of request bounty try", default=options.timeout})
     SetSlashEventHandlers()
+
+    RestartCallback = Callback2.Create()
+    RestartCallback:Bind(CallbackRestartGroupBounty)
 end 
 
 -- player loaded to zone
 function OnPlayerReady(args)
+    if not options.active then
+        return
+    end
+    Debug.EnableLogging(options.debugMode)
+    init(true)
     Print(options.active and 'Status: Running' or 'Status: Stopped')
     if options.autoStartOnLoad then
         GetGroupBounty();
     end
+end
+
+function init(force)
+--[[
+    if not force or flagInited then return end
+
+    RestartCallback = Callback2.Create()
+    RestartCallback:Release()
+    RestartCallback:Bind(CallbackRestartGroupBounty)
+--]]
+    flagInited = true
 end
 
 --  join group bounty
@@ -50,15 +74,21 @@ function GetGroupBounty()
     end
 
     PrintDbg('Requesting bounty...')
+    if options.restartByTimeout then
+        Debug.Log('RestartCallback:')
+        Debug.Log(RestartCallback)
+        RestartCallback:Reschedule(options.timeout)   -- RequestGroupBounty may be failed so we must use RestartCallback here, not in Callback
+    end
     Player.RequestGroupBounty()
 end
 
 -- bounty was cancelled
 function OnCancelGroupBounty(args)
+    RestartCallback:Cancel()
     if flagRestart then
         flagRestart = false
         GetGroupBounty()
-    end
+     end
 end
 
 -- bounty was aborted
@@ -81,6 +111,12 @@ function RestartGroupBounty()
     else
         GetGroupBounty()
     end
+end
+
+-- restart group bounty by timeout
+function CallbackRestartGroupBounty()
+    PrintDbg('Restarting group bounty by callback')
+    RestartGroupBounty()
 end
 
 -- Stop addon, cancel group bounty, leave bounty squad
@@ -119,6 +155,7 @@ function OnSlashAgbHandler(args)
             Print('AutoGroupBounty addon is already running!')
         else
             options.active = true
+            init(true)
             Print('AutoGroupBounty addon was started!')
         end
         GetGroupBounty()
@@ -160,7 +197,9 @@ function OnOptionChange(key, value)
         options.debugMode = value
     elseif key == 'autoStartOnLoad' then
         options.autoStartOnLoad = value
-    elseif key == 'requestBountyTry' then
-        options.requestBountyTry = tonumber(value)
+    elseif key == 'timeout' then
+        options.timeout = tonumber(value)
+    elseif key == 'restartByTimeout' then
+        options.restartByTimeout = value
     end
 end
