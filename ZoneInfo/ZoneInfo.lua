@@ -316,7 +316,7 @@ function OnComponentLoad()
 				if (self:GetData("players", item) == nil) then
 
                     ---- here is user info
-                    Debug.Log(info)
+                    -- Debug.Log(info)
 					validlist[tostring(item)] = "["..tostring(info.battleframe).. "] "..tostring(info.name).." ("..tostring(info.level) .. "/" .. tostring(info.elite_level) .. ")"
 					counter = counter + 1
 				end
@@ -584,7 +584,7 @@ function OnUiEntityAvailable(args)
         -- someone become visible
         -- use frame_icon_id
 			local name = "["..tostring(info.battleframe) .. "] "..tostring(info.name).." ("..tostring(info.level) .. "/" .. tostring(info.elite_level) ..")"--tostring(info.name)
-            Debug.Log(info);
+            -- Debug.Log(info);
 			CUI.Nearby:Update(id, name, 1)
 		end
 	end
