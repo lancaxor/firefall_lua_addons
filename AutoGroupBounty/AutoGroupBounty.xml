@@ -27,5 +27,9 @@ xsi:schemaLocation="http://www.red5studios.com/ ../../../../schemas/component.xs
 
     <!-- afk status was changed -->
     <Event name="ON_AFK_CHANGED" bind="OnAfkChanged"/>
+  
+    <!-- someone joined or left my squad -->
+    <!-- <Event name="ON_SQUAD_ROSTER_UPDATE" bind="OnSquadRosterUpdate" /> -->
+  
   </events>
 </Component>

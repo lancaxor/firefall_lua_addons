@@ -11,6 +11,7 @@ local CHAT_TAG = '[AGB]'
 local CHAT_TAG_DEBUG = '[AGB DEBUGGER]'
 
 local flagRestart = false
+local flagReviewingSquad = false
 local RestartCallback = {}       -- Callback2
 local timeout = 60 -- seconds untill the bounty will be restarted
 local player_afk = false
@@ -23,6 +24,8 @@ local OPTIONS = {
     timeout = 300,
     restartByTimeout = true
 }
+
+local kickList = {}
 
 function OnComponentLoad(args)
     InterfaceOptions.SetCallbackFunc(OnOptionChange, 'AutoGroupBounty')
@@ -37,6 +40,37 @@ function OnComponentLoad(args)
     RestartCallback = Callback2.Create()
     RestartCallback:Bind(CallbackRestartGroupBounty)
 end 
+
+-- someone joined my squad
+function OnSquadRosterUpdate(args)
+
+    PrintDbg('Squad roster update...')
+    if not OPTIONS.active then return end
+    if flagReviewingSquad then return end
+    flagReviewingSquad = true
+    local myInfo = Player.GetInfo()
+    Debug.Log('player info', myInfo)
+    PrintDbg('Its active!...')
+
+    if not Player.HasActiveGroupBounty() then -- kicked or smth like this
+        PrintDbg('Squad roster update: restarting...')
+        RestartGroupBounty()
+        flagReviewingSquad = false
+        return
+    end
+    Debug.Log('Before getting roster')
+    local squadRoster = Squad.GetRoster()
+    local squadLeader = Squad.GetLeader()
+    Debug.Log('squad roster')
+    Debug.Log(squadRoster)
+    Debug.Log('squad leader')
+    Debug.Log(squadLeader)
+    -- check if I am leader
+    -- get user nickname
+    -- Squad.GetLeader
+    -- Squad.Kick
+    flagReviewingSquad = false
+end
 
 -- player's AFK status was changed
 function OnAfkChanged(args)
@@ -79,8 +113,6 @@ function GetGroupBounty()
 
     PrintDbg('Requesting bounty...')
     if OPTIONS.restartByTimeout then
-        Debug.Log('RestartCallback:')
-        Debug.Log(RestartCallback)
         RestartCallback:Reschedule(OPTIONS.timeout)   -- RequestGroupBounty may be failed so we must use RestartCallback here, not in Callback
     end
     Player.RequestGroupBounty()
@@ -151,6 +183,7 @@ end
 function OnSlashAgbHandler(args)
 
     local cmd = args[1] or nil
+    local cmdParam = args[2] or nil
 
     if 'status' == cmd then
         local addonStatus = (OPTIONS.active and 'Status: Running' or 'Status: Stopped')
@@ -177,6 +210,33 @@ function OnSlashAgbHandler(args)
     elseif 'restart' == cmd then
         Print('Restarting group bounty...')
         RestartGroupBounty()
+    elseif 'kicklist' == cmd then   -- show the kicklist
+        if #kickList == 0 then
+            Print('AGB kicklist is empty')
+        else
+            local result = 'Players in kicklist:\n'
+            for key, value in pairs(kickList) do
+                result = result .. value .. '\n'
+            end
+            Print(result)
+        end
+    elseif 'kickadd' == cmd then    -- add player to kicklist
+        table.insert(kickList, cmdParam)
+        Print('Player ' .. cmdParam .. ' was added to AGB kicklist')
+    elseif 'kickremove' == cmd then -- remove player from kicklist
+        local removed = false
+        for key, value in pairs(kickList) do
+            if value == cmdParam then
+                table.remove(kickList, key)
+                removed = true
+                break
+            end
+        end
+        if removed then 
+            Print('Player ' .. cmdParam .. ' was removed from AGB kicklist')
+        else 
+            Print('Player ' .. cmdParam .. ' was not found in AGB kicklist') 
+        end
     else
         Print('Usage: /agb [start|stop|status|help]')
     end
