@@ -314,7 +314,10 @@ function OnComponentLoad()
 			local info = Game.GetTargetInfo(item)
 			if (info.name and info.type == "character" and info.isNpc == false and tostring(info.name) ~= tostring(name)) then
 				if (self:GetData("players", item) == nil) then
-					validlist[tostring(item)] = "["..tostring(info.battleframe).."] "..tostring(info.name).." ("..tostring(info.level)..")"
+
+                    ---- here is user info
+                    Debug.Log(info)
+					validlist[tostring(item)] = "["..tostring(info.battleframe).. "] "..tostring(info.name).." ("..tostring(info.level) .. "/" .. tostring(info.elite_level) .. ")"
 					counter = counter + 1
 				end
 			end
@@ -577,7 +580,11 @@ function OnUiEntityAvailable(args)
 		local info = Game.GetTargetInfo(args.entityId)
 		local id = tostring(args.entityId)
 		if (info.isNpc == false and CUI.Nearby:GetData("players", id) == nil) then
-			local name = "["..tostring(info.battleframe).."] "..tostring(info.name).." ("..tostring(info.level)..")"--tostring(info.name)
+
+        -- someone become visible
+        -- use frame_icon_id
+			local name = "["..tostring(info.battleframe) .. "] "..tostring(info.name).." ("..tostring(info.level) .. "/" .. tostring(info.elite_level) ..")"--tostring(info.name)
+            Debug.Log(info);
 			CUI.Nearby:Update(id, name, 1)
 		end
 	end
@@ -617,6 +624,7 @@ function AsyncResponse(resp, err, callback, args)
 		return
 	end
 	if resp then
+        if args == nil then return end
 		callback(resp, unpack(args))
 	end
 end
